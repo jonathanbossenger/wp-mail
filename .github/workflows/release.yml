@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 'lts/*'
 
       - name: Install dependencies
         run: npm ci
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 'lts/*'
 
       - name: Install dependencies
         run: npm ci
@@ -61,7 +61,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 'lts/*'
 
       - name: Install dependencies
         run: npm ci
@@ -90,7 +90,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/**/*
+            artifacts/macos-build/**/*.dmg
+            artifacts/macos-build/**/*.zip
+            artifacts/windows-build/**/*.exe
+            artifacts/windows-build/**/*.msi
+            artifacts/linux-build/**/*.deb
+            artifacts/linux-build/**/*.rpm
           draft: false
           prerelease: false
         env:
