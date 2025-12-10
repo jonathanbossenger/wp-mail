@@ -1,0 +1,113 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for macOS
+        run: npm run make -- --platform=darwin
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: out/make/**/*
+
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Windows
+        run: npm run make -- --platform=win32
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: out/make/**/*
+
+  build-linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Linux
+        run: npm run make -- --platform=linux
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: out/make/**/*
+
+  release:
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          # Copy macOS builds with platform prefix
+          find artifacts/macos-build -type f \( -name "*.dmg" -o -name "*.zip" \) -exec sh -c 'cp "$1" "release-files/macos-$(basename "$1")"' _ {} \;
+          # Copy Windows builds with platform prefix  
+          find artifacts/windows-build -type f \( -name "*.exe" -o -name "*.msi" \) -exec sh -c 'cp "$1" "release-files/windows-$(basename "$1")"' _ {} \;
+          # Copy Linux builds with platform prefix
+          find artifacts/linux-build -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.zip" \) -exec sh -c 'cp "$1" "release-files/linux-$(basename "$1")"' _ {} \;
+          ls -lh release-files/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-files/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
