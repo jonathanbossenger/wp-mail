@@ -89,7 +89,12 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release-files
-          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} release-files/ \;
+          # Copy macOS builds with platform prefix
+          find artifacts/macos-build -type f \( -name "*.dmg" -o -name "*.zip" \) -exec sh -c 'cp "$1" "release-files/macos-$(basename "$1")"' _ {} \;
+          # Copy Windows builds with platform prefix  
+          find artifacts/windows-build -type f \( -name "*.exe" -o -name "*.msi" \) -exec sh -c 'cp "$1" "release-files/windows-$(basename "$1")"' _ {} \;
+          # Copy Linux builds with platform prefix
+          find artifacts/linux-build -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.zip" \) -exec sh -c 'cp "$1" "release-files/linux-$(basename "$1")"' _ {} \;
           ls -lh release-files/
 
       - name: Upload to release
