@@ -86,16 +86,16 @@ jobs:
         with:
           path: artifacts
 
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} release-files/ \;
+          ls -lh release-files/
+
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/macos-build/**/*.dmg
-            artifacts/macos-build/**/*.zip
-            artifacts/windows-build/**/*.exe
-            artifacts/windows-build/**/*.msi
-            artifacts/linux-build/**/*.deb
-            artifacts/linux-build/**/*.rpm
+          files: release-files/*
           draft: false
           prerelease: false
         env:
